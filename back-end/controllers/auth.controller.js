@@ -86,20 +86,18 @@ exports.login = async (req, res, next) => {
 
     const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, {
       expiresIn: "3 days",
-      // expiresIn: "60 seconds",
     });
 
     // Store refresh token in HTTP-only cookie
     // res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "Strict" });
-    res.cookie("refreshToken", refreshToken, { httpOnly: true , sameSite: "Strict" });
+    res.cookie("refreshToken", refreshToken, { httpOnly: true });
 
     const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "3 days",
-      // expiresIn: "30 seconds",
+      expiresIn: "30 seconds",
     });
 
-    // return res.json({ accessToken });
-    return res.json({ accessToken: accessToken, refreshToken: refreshToken });
+    return res.json({ accessToken });
+    // return res.json({ accessToken: accessToken, refreshToken: refreshToken });
     
   } catch (error) {
     next(error);
@@ -122,35 +120,30 @@ exports.refreshToken = async (req, res, next) => {
 
     if (!oldRefreshToken) return res.sendStatus(401);
 
-    jwt.verify(oldRefreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
+    const decoded = jwt.verify(oldRefreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-      if (err) return res.sendStatus(403);
+    if (!decoded) return res.sendStatus(403);
 
-      const user = userModel.findById(decoded.id).lean();
-      
-      if (!user) {
-        return res.status(404).json({ message: "User Not Found" });
-      }
+    const user = await userModel.findById(decoded.id);
+  
+    if (!user) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
 
-      Reflect.deleteProperty(user, "password");
-
-      req.user = user;
-
-      const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: "3 days",
-      // expiresIn: "60 seconds",
-      });
-
-      res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "Strict" });
-
-      const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "3 days",
-        // expiresIn: "15 seconds",
-      });
-
-      // return res.json({ accessToken });
-      return res.json({ accessToken: accessToken, refreshToken: refreshToken });
+    Reflect.deleteProperty(user, "password");
+  
+    const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: "3 days",
     });
+
+    res.cookie("refreshToken", refreshToken, { httpOnly: true });
+
+    const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "30 seconds",
+    });
+
+    return res.json({ accessToken });
+    // return res.json({ accessToken: accessToken, refreshToken: refreshToken });
 
   }catch(error){
     next(error);

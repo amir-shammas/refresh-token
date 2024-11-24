@@ -9,7 +9,6 @@ router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.get("/me", isAuthenticated, authController.getMe);
 
-// router.post("/refresh-token", authController.refreshToken);
 router.get("/refresh-token", authController.refreshToken);
 
 router.post("/forget-password", authController.forgetPassword);
