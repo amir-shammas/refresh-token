@@ -51,8 +51,25 @@ export default function Login() {
 
   });
 
+  const setCookieForRefreshToken = async (refreshToken) => {
+    try{
+      const userRefreshToken = {
+        refreshToken: refreshToken,
+      }
+      await fetch("http://localhost:4000/auth/set-cookie-for-refresh-token", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include", // Include credentials for cookies
+        body: JSON.stringify(userRefreshToken),
+      })
+    }catch(error){
+      console.log(error);
+    }
+  }
+
   const userLogin = (values) => {
-    // event.preventDefault();
 
     const userData = {
       identifier: values.email,
@@ -86,7 +103,7 @@ export default function Login() {
         })
         // console.log(result);
         authContext.login({}, result.accessToken, rememberMe);
-        
+        setCookieForRefreshToken(result.refreshToken);
       })
       .catch((err) => {
         swal({
@@ -96,7 +113,6 @@ export default function Login() {
         });
       });
 
-    // console.log(userData);
   };
 
   useEffect(() => {

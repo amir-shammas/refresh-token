@@ -2,6 +2,7 @@ const express = require("express");
 const { setHeaders } = require("./middlewares/headers.middleware");
 const { errorHandler } = require("./middlewares/errors.middleware");
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
 
 //*routes import
@@ -22,6 +23,7 @@ app.use(cookieParser());
 
 //* CORS Policy Definitions
 app.use(setHeaders);
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
 
 //* Routes

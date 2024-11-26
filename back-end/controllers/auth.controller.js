@@ -84,20 +84,16 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ message: "password is not correct" });
     }
 
+    const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      // expiresIn: "30 seconds",
+      expiresIn: "3 days",
+    });
+
     const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, {
       expiresIn: "3 days",
     });
 
-    // Store refresh token in HTTP-only cookie
-    // res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "Strict" });
-    res.cookie("refreshToken", refreshToken, { httpOnly: true });
-
-    const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "30 seconds",
-    });
-
-    return res.json({ accessToken });
-    // return res.json({ accessToken: accessToken, refreshToken: refreshToken });
+    return res.json({ accessToken: accessToken, refreshToken: refreshToken });
     
   } catch (error) {
     next(error);
@@ -111,6 +107,17 @@ exports.getMe = async (req, res, next) => {
     next(error);
   }
 };
+
+
+exports.setCookieForRefreshToken = (req, res, next) => {
+  try{
+    const {refreshToken} = req.body;
+    res.cookie("refreshToken", refreshToken, { httpOnly: true });
+    res.send("ok");
+  }catch(error){
+    next(error)
+  }
+}
 
 
 exports.refreshToken = async (req, res, next) => {
