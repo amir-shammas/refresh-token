@@ -120,7 +120,8 @@ function UserPanelEditAccount() {
       .then((updatedUser) => {
         // console.log(updatedUser);
         // Update the global context with new user information
-        authContext.login(updatedUser, loggedInUser.token);
+        // authContext.login(updatedUser, loggedInUser.token);
+        authContext.login(updatedUser, loggedInUser.token, authContext.refreshToken);
         swal({
           title: "ویرایش کاربر با موفقیت انجام شد",
           icon: "success",

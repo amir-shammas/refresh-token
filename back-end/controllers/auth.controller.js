@@ -62,6 +62,7 @@ exports.register = async (req, res, next) => {
   }
 };
 
+
 exports.login = async (req, res, next) => {
   try {
     const { identifier, password } = req.body;
@@ -100,6 +101,7 @@ exports.login = async (req, res, next) => {
   }
 };
 
+
 exports.getMe = async (req, res, next) => {
   try {
     return res.json({ ...req.user });
@@ -120,37 +122,60 @@ exports.setCookieForRefreshToken = (req, res, next) => {
 }
 
 
+exports.getCookieForRefreshToken = (req, res, next) => {
+  try{
+    const allCookies = req.cookies;
+    res.send(allCookies);
+  }catch(error){
+    next(error)
+  }
+}
+
+
+exports.clearCookieForRefreshToken = (req, res, next) => {
+  try{
+    res.clearCookie("refreshToken");
+    res.send("refreshToken cleared !");
+  }catch(error){
+    next(error)
+  }
+}
+
+
 exports.refreshToken = async (req, res, next) => {
   try{
     
-    const oldRefreshToken = req.cookies.refreshToken;
+    // const oldRefreshToken = req.cookies.refreshToken;
 
-    if (!oldRefreshToken) return res.sendStatus(401);
+    // if (!oldRefreshToken) return res.sendStatus(401);
 
-    const decoded = jwt.verify(oldRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    if(req.cookies.refreshToken){
 
-    if (!decoded) return res.sendStatus(403);
+      const oldRefreshToken = req.cookies.refreshToken;
 
-    const user = await userModel.findById(decoded.id);
-  
-    if (!user) {
-      return res.status(404).json({ message: "User Not Found" });
+      const decoded = jwt.verify(oldRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+      if (!decoded) return res.sendStatus(403);
+
+      const user = await userModel.findById(decoded.id);
+    
+      if (!user) {
+        return res.status(404).json({ message: "User Not Found" });
+      }
+
+      Reflect.deleteProperty(user, "password");
+    
+      const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, {
+      expiresIn: "3 days",
+      });
+
+      const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "30 seconds",
+        // expiresIn: "3 days",
+      });
+
+      return res.json({ accessToken: accessToken, refreshToken: refreshToken });
     }
-
-    Reflect.deleteProperty(user, "password");
-  
-    const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "3 days",
-    });
-
-    res.cookie("refreshToken", refreshToken, { httpOnly: true });
-
-    const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "30 seconds",
-    });
-
-    return res.json({ accessToken });
-    // return res.json({ accessToken: accessToken, refreshToken: refreshToken });
 
   }catch(error){
     next(error);

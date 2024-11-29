@@ -14,6 +14,7 @@ import {eyeOff} from 'react-icons-kit/feather/eyeOff';
 
 import "./Login.css";
 
+
 export default function Login() {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
@@ -51,24 +52,6 @@ export default function Login() {
 
   });
 
-  const setCookieForRefreshToken = async (refreshToken) => {
-    try{
-      const userRefreshToken = {
-        refreshToken: refreshToken,
-      }
-      await fetch("http://localhost:4000/auth/set-cookie-for-refresh-token", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        credentials: "include", // Include credentials for cookies
-        body: JSON.stringify(userRefreshToken),
-      })
-    }catch(error){
-      console.log(error);
-    }
-  }
-
   const userLogin = (values) => {
 
     const userData = {
@@ -102,8 +85,8 @@ export default function Login() {
           navigate('/')
         })
         // console.log(result);
-        authContext.login({}, result.accessToken, rememberMe);
-        setCookieForRefreshToken(result.refreshToken);
+        // authContext.login({}, result.accessToken, rememberMe);
+        authContext.login({}, result.accessToken, result.refreshToken, rememberMe);
       })
       .catch((err) => {
         swal({
